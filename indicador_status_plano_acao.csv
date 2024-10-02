@@ -1,0 +1,4 @@
+index;indicador;status;quantidade
+1;indicador1;concluido;20
+2;indicador1;em_andamento;50
+3;indicador1;cancelado;10
