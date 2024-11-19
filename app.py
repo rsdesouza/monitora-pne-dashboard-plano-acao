@@ -1,45 +1,154 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
+from st_files_connection import FilesConnection
 
 def main():
     # Configurar o layout da página
     st.set_page_config(layout="wide")
 
-    st.title("Acompanhamento dos planos de ação")
+    st.title("Acompanhamento de Estratégias - Meta 15 do PNE")
 
-    ###### Total de Planos de ação por indicador ######
-    dfIndicadorGeral = pd.read_csv("indicador_qt_plano_acao.csv", sep=";", decimal=",")
-    dfIndicadorGeral.set_index('index', inplace=True)
+    # Conectar ao Google Cloud Storage (GCS) e ler o arquivo CSV
+    conn = st.connection('gcs', type=FilesConnection)
 
-    ###### Total status por indicador ######
-    dfStatus = pd.read_csv("indicador_status_plano_acao.csv", sep=";", decimal=",")
-    dfStatus.set_index('index', inplace=True)
+    # Especificar o caminho do arquivo no bucket do GCS
+    df = conn.read("monitora_pne_15_streamlit/planoacao.csv", input_format="csv", ttl=600, sep=";", decimal=",")
+
+    df.set_index('index', inplace=True)
+
+    ###### Consulta plano de ação agrupado ######
+    consulta_plano_acao_agrupado = df.groupby(['status', 'indicador']).size().reset_index(name='total_planos_de_acao')
+
+    ###### Consulta Indicador 1 ######
+    consultaIndicador1 = df[df['indicador'] == 'indicador1']
+    agrupamento_status_indicador1 = consultaIndicador1.groupby('status').size().reset_index(name='total_planos_de_acao')
+
+    ###### Consulta Indicador 2 ######
+    consultaIndicador2 = df[df['indicador'] == 'indicador2']
+    agrupamento_status_indicador2 = consultaIndicador2.groupby('status').size().reset_index(name='total_planos_de_acao')
+
+    ###### Consulta Indicador 3 ######
+    consultaIndicador3 = df[df['indicador'] == 'indicador3']
+    agrupamento_status_indicador3 = consultaIndicador3.groupby('status').size().reset_index(name='total_planos_de_acao')
+
+    ###### Consulta Indicador 4 ######
+    consultaIndicador4 = df[df['indicador'] == 'indicador4']
+    agrupamento_status_indicador4 = consultaIndicador4.groupby('status').size().reset_index(name='total_planos_de_acao')
 
     ##### Área de Gráficos #####
-    st.markdown("Abaixo os gráficos de acompanhamento dos planos de ação aplicadas às estratégias dos indicadores da meta 15 do PNE.")
 
-    # Gráfico 1: Total de Planos de Ação
-    multi = '''**Planos de Ação** - Total de planos de ação associados aos indicadores da meta 15 do PNE.'''
-    st.markdown(multi)
-
-    grafico_geral = px.bar(dfIndicadorGeral, x='indicador', y='quantidade', color='indicador',
-                           title='Indicador Geral - Total de planos de ação ativos vinculados aos indicadores.')
+    #### Geral ####
+    grafico_geral = px.bar(
+        consulta_plano_acao_agrupado,
+        x='status',
+        y='total_planos_de_acao',
+        color='indicador',
+        title='Status Geral dos planos de ação por indicador'
+    )
     st.plotly_chart(grafico_geral)
 
-    # Gráfico 2: Status dos Planos de Ação para o Indicador 1
-    multi = '''**Status dos Planos de Ação para o Indicador 1.**'''
+    multi = '''**INDICADOR 15A** - Proporção de docências da educação infantil com professores cuja formação superior está adequada à área de conhecimento que lecionam.
+    #'''
     st.markdown(multi)
 
-    indicador1 = px.bar(dfStatus, x='status', y='quantidade', color='status', title='Status por Indicador')
-    indicador1Pizza = px.pie(dfStatus, values='quantidade', names='status', color='status', title='Status por Indicador')
+    grafico_indicador1 = px.bar(
+        agrupamento_status_indicador1,
+        x='status',
+        y='total_planos_de_acao',
+        color='status',
+        title='Status por indicador'
+    )
+    grafico_pizza_indicador1 = px.pie(
+        agrupamento_status_indicador1,
+        values='total_planos_de_acao',
+        names='status',
+        color='status',
+        title='Status por indicador'
+    )
 
-    # Exibir os gráficos lado a lado
     col1, col2 = st.columns(2)
     with col1:
-        st.plotly_chart(indicador1)
+        st.plotly_chart(grafico_indicador1)
     with col2:
-        st.plotly_chart(indicador1Pizza)
+        st.plotly_chart(grafico_pizza_indicador1)
+
+    multi = '''**INDICADOR 15B** - Proporção de docências dos anos iniciais do ensino fundamental com professores cuja formação
+    superior está adequada à área de conhecimento que lecionam.
+    #'''
+    st.markdown(multi)
+
+    grafico_indicador2 = px.bar(
+        agrupamento_status_indicador2,
+        x='status',
+        y='total_planos_de_acao',
+        color='status',
+        title='Status por indicador'
+    )
+    grafico_pizza_indicador2 = px.pie(
+        agrupamento_status_indicador2,
+        values='total_planos_de_acao',
+        names='status',
+        color='status',
+        title='Status por indicador'
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(grafico_indicador2)
+    with col2:
+        st.plotly_chart(grafico_pizza_indicador2)
+
+    multi = '''**INDICADOR 15C** - Proporção de docências dos anos finais do ensino fundamental com professores cuja formação
+    superior está adequada à área de conhecimento que lecionam.
+    #'''
+    st.markdown(multi)
+
+    grafico_indicador3 = px.bar(
+        agrupamento_status_indicador3,
+        x='status',
+        y='total_planos_de_acao',
+        color='status',
+        title='Status por indicador'
+    )
+    grafico_pizza_indicador3 = px.pie(
+        agrupamento_status_indicador3,
+        values='total_planos_de_acao',
+        names='status',
+        color='status',
+        title='Status por indicador'
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(grafico_indicador3)
+    with col2:
+        st.plotly_chart(grafico_pizza_indicador3)
+
+    multi = '''**INDICADOR 15D** - Proporção de docências do ensino médio com professores cuja formação superior está adequada
+    à área de conhecimento que lecionam.
+    #'''
+    st.markdown(multi)
+
+    grafico_indicador4 = px.bar(
+        agrupamento_status_indicador4,
+        x='status',
+        y='total_planos_de_acao',
+        color='status',
+        title='Status por indicador'
+    )
+    grafico_pizza_indicador4 = px.pie(
+        agrupamento_status_indicador4,
+        values='total_planos_de_acao',
+        names='status',
+        color='status',
+        title='Status por indicador'
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(grafico_indicador4)
+    with col2:
+        st.plotly_chart(grafico_pizza_indicador4)
 
 if __name__ == "__main__":
     main()
